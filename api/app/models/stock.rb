@@ -18,4 +18,13 @@ class Stock < ApplicationRecord
   def value
     stock_values.latest.value
   end
+
+  def adjacent
+    Stock.where('row >= ? AND row <= ? AND stocks.column >= ? AND stocks.column <= ? AND id != ?',
+                  row - 1,
+                  row + 1,
+                  column - 1,
+                  column + 1,
+                  id)
+  end
 end

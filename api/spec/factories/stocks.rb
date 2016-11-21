@@ -12,7 +12,7 @@
 
 FactoryGirl.define do
   factory :stock do
-    symbol "MyString"
+    symbol {SecureRandom.hex(3)}
     row 1
     column 1
   end
