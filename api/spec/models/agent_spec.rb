@@ -125,6 +125,48 @@ RSpec.describe Agent, type: :model do
       expect(agent.reload.stock).to eq(adjacent_stock)
     end
 
+    it 'only purchases affordable stocks' do
+      current_stock = FactoryGirl.create(:stock)
+      FactoryGirl.create(:stock_value, stock: current_stock, value: 10)
+
+      # Lots of Stocks cost too much to purchase
+      unaffordable_stock_a = FactoryGirl.create(:stock)
+      unaffordable_stock_a.stub(:value).and_return(1000)
+
+      unaffordable_stock_b = FactoryGirl.create(:stock)
+      unaffordable_stock_b.stub(:value).and_return(1000)
+
+      unaffordable_stock_c = FactoryGirl.create(:stock)
+      unaffordable_stock_c.stub(:value).and_return(1000)
+
+      # Only one stock is cheap enough to buy
+      affordable_stock_d = FactoryGirl.create(:stock)
+      affordable_stock_d.stub(:value).and_return(agent.cash)
+
+      Stock.any_instance.stub(:adjacent).and_return([unaffordable_stock_a, unaffordable_stock_b, unaffordable_stock_c, affordable_stock_d])
+
+      # Expect the Agent to move to the only affordable stock.
+      agent.purchase(current_stock)
+      agent.move
+      expect(agent.reload.stock).to eq(affordable_stock_d)
+    end
+
+    it 'raises an exception if no affordable moves are available' do
+      current_stock = FactoryGirl.create(:stock)
+      FactoryGirl.create(:stock_value, stock: current_stock, value: 10)
+
+      # Only adjacent Stock costs too much
+      unaffordable_stock_a = FactoryGirl.create(:stock)
+      unaffordable_stock_a.stub(:value).and_return(1000)
+
+
+      Stock.any_instance.stub(:adjacent).and_return([unaffordable_stock_a])
+
+      # Expect the Agent to move to the only affordable stock.
+      agent.purchase(current_stock)
+      expect{agent.move}.to raise_error(Agent::NoMovesAvailableError)
+    end
+
   end
 
   describe 'last_prices' do
@@ -181,6 +223,7 @@ RSpec.describe Agent, type: :model do
       expect(agent.value).to eq(cash_value + holding_value)
     end
   end
+
   # describe 'act' do
   #   it 'purchases an adjacent stock if the direction is down' do
   # 

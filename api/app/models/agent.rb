@@ -12,6 +12,9 @@ class Agent < ApplicationRecord
   class InsufficientCashError < StandardError
   end
 
+  class NoMovesAvailableError < StandardError
+  end
+
   has_many :holdings
 
   def stock
@@ -45,8 +48,17 @@ class Agent < ApplicationRecord
   def move
     raise StandardError unless stock
 
-    adjacent_stocks = stock.adjacent
-    purchase(adjacent_stocks.sample)
+    adjacent_stocks = stock.adjacent.to_a.shuffle! # Randomize the array of nearby Stocks
+
+    adjacent_stocks.each do |adjacent_stock|
+      if adjacent_stock.value <= value # Can we purchase this?
+        purchase(adjacent_stock)
+        return
+      end
+    end
+
+    # If we fall through to here, there was nothing affordable to buy
+    raise NoMovesAvailableError
   end
 
   def last_prices(quote_count)
