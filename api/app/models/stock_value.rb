@@ -9,6 +9,11 @@
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #
+# Indexes
+#
+#  index_stock_values_on_quoted_at  (quoted_at)
+#  index_stock_values_on_stock_id   (stock_id)
+#
 
 class StockValue < ApplicationRecord
   belongs_to :stock
