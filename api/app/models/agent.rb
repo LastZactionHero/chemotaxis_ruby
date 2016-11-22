@@ -20,7 +20,7 @@ class Agent < ApplicationRecord
   class Dead < StandardError
   end
 
-  has_many :holdings
+  has_many :holdings, dependent: :destroy
 
   def act
     case direction(LATEST_PRICE_COUNT)
