@@ -130,6 +130,6 @@ RSpec.describe Agent, type: :model do
   #   it 'dies if there are no affordable stocks to purchase' do
   # 
   #   end
-  end
+  # end
 
 end
