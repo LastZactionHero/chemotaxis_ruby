@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161121155850) do
+ActiveRecord::Schema.define(version: 20161122143654) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -18,6 +18,7 @@ ActiveRecord::Schema.define(version: 20161121155850) do
   create_table "agents", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.float    "cash"
   end
 
   create_table "holdings", force: :cascade do |t|
@@ -28,6 +29,7 @@ ActiveRecord::Schema.define(version: 20161121155850) do
     t.datetime "held_at"
     t.datetime "created_at",     null: false
     t.datetime "updated_at",     null: false
+    t.integer  "quantity"
     t.index ["agent_id"], name: "index_holdings_on_agent_id", using: :btree
     t.index ["held_at"], name: "index_holdings_on_held_at", using: :btree
     t.index ["stock_id"], name: "index_holdings_on_stock_id", using: :btree

@@ -4,6 +4,11 @@ RSpec.describe Agent, type: :model do
   describe 'purchase' do
     let(:agent){FactoryGirl.create(:agent)}
 
+    let(:first_stock){FactoryGirl.create(:stock)}
+    let(:first_stock_value){FactoryGirl.create(:stock_value, stock: first_stock, value: agent.cash / 2)}
+    let(:second_stock){FactoryGirl.create(:stock)}
+    let(:second_stock_value){FactoryGirl.create(:stock_value, stock: second_stock, value: agent.cash)}
+
     it 'creates a holding for the stock' do
       expect(Holding.count).to eq(0) # Assumption
 
@@ -20,19 +25,63 @@ RSpec.describe Agent, type: :model do
         expect(holding.held_at).to be_within(1.second).of(date)
         expect(holding.purchase_price).to eq(100)
         expect(holding.stock).to eq(stock)
+        expect(holding.quantity).to eq(1)
       end
     end
 
     it 'sets the sale price of the current Holding' do
-      first_stock = FactoryGirl.create(:stock)
-      first_stock_value = FactoryGirl.create(:stock_value, stock: first_stock, value: 100)
-      first_holding = FactoryGirl.create(:holding, agent: agent, stock: first_stock)
+      agent_starting_cash = agent.cash
 
-      second_stock = FactoryGirl.create(:stock)
-      second_stock_value = FactoryGirl.create(:stock_value, stock: second_stock, value: 200)
+      first_holding = FactoryGirl.create(:holding, agent: agent, stock: first_stock)
+      first_stock_value; second_stock_value
 
       agent.purchase(second_stock)
-      expect(first_holding.reload.sale_price).to eq(100)
+      expect(first_holding.reload.sale_price).to eq(agent_starting_cash / 2)
+    end
+
+    it 'subtracts cash from the new holding' do
+      first_stock_value.update_attribute(:value, 200)
+      agent.update_attribute(:cash, first_stock_value.value + 2)
+
+      agent.purchase(first_stock)
+      expect(agent.cash).to eq(2)
+    end
+
+    it 'adds cash from the sold holding' do
+      second_stock_value.update_attribute(:value, 100)
+      agent.update_attribute(:cash, 102) # Has enough cash on hand to purchase one share of the Stock, with a bit left over
+
+      # Also owns two shares of a different Stock. Together with it's cash on hand, it should be able to purchase 3
+      # Shares of the new stock
+      first_stock_value.update_attribute(:value, 100)
+      holding = FactoryGirl.create(:holding, agent: agent, stock: first_stock, quantity: 2)
+
+      agent.purchase(second_stock)
+      expect(agent.cash).to eq(2) # Still has $2 left over
+      expect(agent.current_holding.quantity).to eq(3) # Was able to puchase 3 shares
+    end
+
+    it 'purchases the maximum amount of the Stock possible with cash available' do
+      expect(Holding.count).to eq(0) # Assumption
+
+      stock = FactoryGirl.create(:stock)
+      stock_value = FactoryGirl.create(:stock_value, stock: stock, value: 100)
+
+      agent.update_attribute(:cash, stock.value * 3)
+
+      agent.purchase(stock)
+
+      holding = Holding.first
+      expect(holding.quantity).to eq(3)
+    end
+
+    it 'raises an exception if it does not have enough cash available to purchase any of the Stock' do
+      stock = FactoryGirl.create(:stock)
+      stock_value = FactoryGirl.create(:stock_value, stock: stock, value: 100)
+
+      agent.update_attribute(:cash, 50)
+
+      expect{agent.purchase(stock)}.to raise_error(Agent::InsufficientCashError)
     end
   end
 
@@ -75,6 +124,7 @@ RSpec.describe Agent, type: :model do
       agent.move
       expect(agent.reload.stock).to eq(adjacent_stock)
     end
+
   end
 
   describe 'last_prices' do
@@ -114,6 +164,23 @@ RSpec.describe Agent, type: :model do
     end
   end
 
+  describe 'value' do
+    let(:cash_value){200}
+    let(:agent){FactoryGirl.create(:agent, cash: cash_value)}
+
+    it 'returns the cash value if no holdings' do
+      expect(agent.value).to eq(cash_value)
+    end
+
+    it 'returns the cach value + holding value' do
+      holding_value = 500
+      Holding.any_instance.stub(:value).and_return(holding_value)
+
+      holding = FactoryGirl.create(:holding, agent: agent, stock: FactoryGirl.create(:stock))
+
+      expect(agent.value).to eq(cash_value + holding_value)
+    end
+  end
   # describe 'act' do
   #   it 'purchases an adjacent stock if the direction is down' do
   # 

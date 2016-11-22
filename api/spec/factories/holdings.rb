@@ -5,5 +5,6 @@ FactoryGirl.define do
     purchase_price 1.5
     sale_price 1.5
     held_at "2016-11-21 06:21:38"
+    quantity 1
   end
 end

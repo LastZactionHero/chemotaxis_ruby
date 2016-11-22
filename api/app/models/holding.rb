@@ -10,6 +10,7 @@
 #  held_at        :datetime
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null
+#  quantity       :integer
 #
 # Indexes
 #
@@ -23,4 +24,9 @@ class Holding < ApplicationRecord
   belongs_to :agent
 
   scope :latest, -> { order('held_at DESC').first }
+
+  def value
+    stock.value * quantity
+  end
+
 end
