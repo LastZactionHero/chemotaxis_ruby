@@ -224,22 +224,36 @@ RSpec.describe Agent, type: :model do
     end
   end
 
-  # describe 'act' do
-  #   it 'purchases an adjacent stock if the direction is down' do
-  # 
-  #   end
-  # 
-  #   it 'stays in place if the direction is up' do
-  # 
-  #   end
-  # 
-  #   it 'stays in place is the direction is equal' do
-  # 
-  #   end
-  # 
-  #   it 'dies if there are no affordable stocks to purchase' do
-  # 
-  #   end
-  # end
+  describe 'act' do
+    let(:agent){FactoryGirl.create(:agent)}
+
+    it 'purchases an adjacent stock if the direction is down' do
+      agent.stub(:direction).and_return(:down)
+      expect(agent).to receive(:move)
+
+      agent.act
+    end
+
+    it 'stays in place if the direction is up' do
+      agent.stub(:direction).and_return(:up)
+      expect(agent).not_to receive(:move)
+
+      agent.act
+    end
+
+    it 'stays in place is the direction is equal' do
+      agent.stub(:direction).and_return(:equal)
+      expect(agent).not_to receive(:move)
+
+      agent.act
+    end
+
+    it 'dies if there are no affordable stocks to purchase' do
+      agent.stub(:direction).and_return(:down)
+      expect(agent).to receive(:move).and_raise(Agent::NoMovesAvailableError)
+
+      expect{agent.act}.to raise_error(Agent::Dead)
+    end
+  end
 
 end

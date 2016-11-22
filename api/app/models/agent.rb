@@ -9,13 +9,30 @@
 #
 
 class Agent < ApplicationRecord
+  LATEST_PRICE_COUNT = 3
+
   class InsufficientCashError < StandardError
   end
 
   class NoMovesAvailableError < StandardError
   end
 
+  class Dead < StandardError
+  end
+
   has_many :holdings
+
+  def act
+    case direction(LATEST_PRICE_COUNT)
+    when :down
+      begin
+        move
+      rescue NoMovesAvailableError
+        raise Dead
+      end
+    else
+    end
+  end
 
   def stock
     current_holding ? current_holding.stock : nil
@@ -76,6 +93,5 @@ class Agent < ApplicationRecord
     total_value += current_holding.value if current_holding
     total_value
   end
-
 
 end
