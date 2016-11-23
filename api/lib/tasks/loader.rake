@@ -15,4 +15,9 @@ namespace :loader do
       end
     end
   end
+
+  desc 'Continuous Data Collection'
+  task :data_collection => :environment do
+    DataCollector.new.run
+  end
 end
