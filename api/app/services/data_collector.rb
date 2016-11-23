@@ -1,7 +1,7 @@
 class DataCollector
   def run
     Rails.logger.level=1
-
+    begin
     while true
       Rails.logger.warn time_eastern
       if market_open?
@@ -12,6 +12,9 @@ class DataCollector
       end
 
       sleep(5 * 60)
+    end
+    rescue StockQuote::NoDataForStockError => e
+      Rails.logger.error e
     end
   end
 

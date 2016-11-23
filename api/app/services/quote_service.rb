@@ -10,6 +10,7 @@ class QuoteService
           value: quote.last_trade_price_only
         })
       end
+      sleep(10)
     end
   end
 
